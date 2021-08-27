@@ -41,3 +41,4 @@ _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 /sources/Test/OpenMcdf.Benchmark/BenchmarkDotNet.Artifacts/OpenMcdf.Benchmark.InMemory-20190412-113734.log
+.idea/
