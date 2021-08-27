@@ -162,7 +162,7 @@ namespace OpenMcdf.Extensions.Test
                 }
             }catch(Exception ex)
             {
-                Assert.Fail();
+                Assert.Fail(ex.Message);
             }
 
         }
@@ -213,7 +213,7 @@ namespace OpenMcdf.Extensions.Test
             }
             catch (Exception ex)
             {
-                Assert.Fail();
+                Assert.Fail(ex.Message);
             }
 
         }
