@@ -1,3 +1,5 @@
+[![Tests](https://github.com/provegard/openmcdf-3/actions/workflows/tests.yml/badge.svg)](https://github.com/provegard/openmcdf-3/actions/workflows/tests.yml)
+
 # openmcdf
 **Structured Storage .net component - pure C#**
 
