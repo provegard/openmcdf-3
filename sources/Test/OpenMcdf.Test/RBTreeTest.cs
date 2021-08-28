@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OpenMcdf;
 using RedBlackTree;
 
 namespace OpenMcdf.Test
@@ -14,57 +11,12 @@ namespace OpenMcdf.Test
     [TestClass]
     public class RBTreeTest
     {
-        public RBTreeTest()
-        {
-            
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-
         internal IList<IDirectoryEntry> GetDirectoryRepository(int count)
         {
-            List<IDirectoryEntry> repo = new List<IDirectoryEntry>();
+            List<IDirectoryEntry> repo = new List<IDirectoryEntry>(count);
             for (int i = 0; i < count; i++)
             {
-                IDirectoryEntry de =  DirectoryEntry.New(i.ToString(), StgType.StgInvalid, repo);
+                DirectoryEntry.New(i.ToString(), StgType.StgInvalid, repo);
             }
 
             return repo;
@@ -74,7 +26,7 @@ namespace OpenMcdf.Test
         public void Test_RBTREE_INSERT()
         {
             RBTree rbTree = new RBTree();
-            System.Collections.Generic.IList<IDirectoryEntry> repo = GetDirectoryRepository(1000000);
+            IList<IDirectoryEntry> repo = GetDirectoryRepository(1000000);
 
             foreach (var item in repo)
             {
@@ -83,11 +35,9 @@ namespace OpenMcdf.Test
 
             for (int i = 0; i < repo.Count; i++)
             {
-                IRBNode c;
-                rbTree.TryLookup(DirectoryEntry.Mock(i.ToString(), StgType.StgInvalid), out c);
-                Assert.IsTrue(c is IDirectoryEntry);
-                Assert.IsTrue(((IDirectoryEntry)c).Name == i.ToString());
-                //Assert.IsTrue(c.IsStream);
+                rbTree.TryLookup(DirectoryEntry.Mock(i.ToString(), StgType.StgInvalid), out var c);
+                Assert.IsInstanceOfType(c, typeof(IDirectoryEntry));
+                Assert.AreEqual(i.ToString(), ((IDirectoryEntry)c).Name);
             }
         }
 
@@ -96,7 +46,7 @@ namespace OpenMcdf.Test
         public void Test_RBTREE_DELETE()
         {
             RBTree rbTree = new RBTree();
-            System.Collections.Generic.IList<IDirectoryEntry> repo = GetDirectoryRepository(25);
+            IList<IDirectoryEntry> repo = GetDirectoryRepository(25);
 
 
             foreach (var item in repo)
@@ -106,35 +56,30 @@ namespace OpenMcdf.Test
 
             try
             {
-                IRBNode n;
-                rbTree.Delete(DirectoryEntry.Mock("5", StgType.StgInvalid),out n);
-                rbTree.Delete(DirectoryEntry.Mock("24", StgType.StgInvalid), out n);
-                rbTree.Delete(DirectoryEntry.Mock("7", StgType.StgInvalid), out n);
+                rbTree.Delete(DirectoryEntry.Mock("5", StgType.StgInvalid), out _);
+                rbTree.Delete(DirectoryEntry.Mock("24", StgType.StgInvalid), out _);
+                rbTree.Delete(DirectoryEntry.Mock("7", StgType.StgInvalid), out _);
+
+                VerifyNodeDoesntExist(rbTree, "5");
+                VerifyNodeDoesntExist(rbTree, "7");
+                VerifyNodeDoesntExist(rbTree, "24");
+
+                IRBNode c;
+                Assert.IsTrue(rbTree.TryLookup(DirectoryEntry.Mock("6", StgType.StgStream), out c));
+                Assert.IsInstanceOfType(c, typeof(IDirectoryEntry));
+                Assert.IsTrue(rbTree.TryLookup(DirectoryEntry.Mock("12", StgType.StgStream), out c));
+                Assert.AreEqual("12", ((IDirectoryEntry) c).Name);
             }
             catch (Exception ex)
             {
                 Assert.Fail("Item removal failed: " + ex.Message);
             }
+        }
 
-
-
-            //    CFItem c;
-            //    bool s = rbTree.TryLookup(new CFMock("7", StgType.StgStream), out c);
-
-
-            //    Assert.IsFalse(s);
-
-            //    c = null;
-
-            //    Assert.IsTrue(rbTree.TryLookup(new CFMock("6", StgType.StgStream), out c));
-            //    Assert.IsTrue(c.IsStream);
-            //    Assert.IsTrue(rbTree.TryLookup(new CFMock("12", StgType.StgStream), out c));
-            //    Assert.IsTrue(c.Name == "12");
-
-
-            //}
-
-          
+        private static void VerifyNodeDoesntExist(RBTree rbTree, string value)
+        {
+            bool s = rbTree.TryLookup(DirectoryEntry.Mock(value, StgType.StgStream), out _);
+            Assert.IsFalse(s);
         }
 
         private static void VerifyProperties(RBTree t)
@@ -148,7 +93,7 @@ namespace OpenMcdf.Test
 
         private static Color NodeColor(IRBNode n) 
         {
-            return n == null ? Color.BLACK : n.Color;
+            return n?.Color ?? Color.BLACK;
         }
 
         private static void VerifyProperty1(IRBNode n)
@@ -219,7 +164,7 @@ namespace OpenMcdf.Test
         public void Test_RBTREE_ENUMERATE()
         {
             RBTree rbTree = new RBTree();
-            System.Collections.Generic.IList<IDirectoryEntry> repo = GetDirectoryRepository(10000);
+            IList<IDirectoryEntry> repo = GetDirectoryRepository(10000);
 
             foreach (var item in repo)
             {
@@ -227,7 +172,6 @@ namespace OpenMcdf.Test
             }
 
             VerifyProperties(rbTree);
-            //rbTree.Print();
         }
     }
 }
