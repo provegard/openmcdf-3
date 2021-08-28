@@ -239,6 +239,5 @@ namespace OpenMcdf.Extensions.Test
             }
 
         }
-
     }
 }
