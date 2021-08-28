@@ -2719,11 +2719,8 @@ namespace OpenMcdf
 
             foreach (IDirectoryEntry id in r)
             {
-                if (id.GetEntryName() == entryName && id.StgType != StgType.StgInvalid)
-                {
-                    CFItem i = id.StgType == StgType.StgStorage ? (CFItem)new CFStorage(this, id) : (CFItem)new CFStream(this, id);
-                    result.Add(i);
-                }
+                CFItem i = id.StgType == StgType.StgStorage ? (CFItem)new CFStorage(this, id) : (CFItem)new CFStream(this, id);
+                result.Add(i);
             }
 
             return result;
