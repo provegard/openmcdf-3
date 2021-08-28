@@ -15,51 +15,8 @@ namespace OpenMcdf.Test
     [TestClass]
     public class CompoundFileTest
     {
-        public CompoundFileTest()
-        {
-
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-
+        private static readonly Guid CLSID_EXCEL_Sheet_8 = Guid.Parse("00020820-0000-0000-c000-000000000046");
+        
         [TestMethod]
         public void Test_COMPRESS_SPACE()
         {
@@ -185,7 +142,7 @@ namespace OpenMcdf.Test
             CFStream sm2 = st2.GetStream("MyStream");
 
             Assert.IsNotNull(sm2);
-            Assert.IsTrue(sm2.Size == 220);
+            Assert.AreEqual(220, sm2.Size);
 
             cf2.Close();
         }
@@ -210,7 +167,7 @@ namespace OpenMcdf.Test
             CFStream sm2 = st2.GetStream("MyStream");
 
             Assert.IsNotNull(sm2);
-            Assert.IsTrue(sm2.Size == b.Length);
+            Assert.AreEqual(b.Length, sm2.Size);
 
             cf2.Close();
         }
@@ -237,9 +194,10 @@ namespace OpenMcdf.Test
         [TestMethod]
         public void Test_MULTIPLE_SAVE()
         {
+            const string testFileName = "test.mdf";
             var file = new CompoundFile();
 
-            file.Save("test.mdf");
+            file.Save(testFileName);
 
             var meta = file.
                 RootStorage.
@@ -248,7 +206,9 @@ namespace OpenMcdf.Test
             meta.Append(BitConverter.GetBytes(DateTime.Now.ToBinary()));
             meta.Append(BitConverter.GetBytes(DateTime.Now.ToBinary()));
 
-            file.Save("test.mdf");
+            file.Save(testFileName);
+
+            File.Delete(testFileName);
         }
 
         [TestMethod]
@@ -257,7 +217,7 @@ namespace OpenMcdf.Test
             var f = new CompoundFile("testbad.ole");
             CFStream cfs = f.RootStorage.GetStream("\x01Ole10Native");
             byte[] data = cfs.GetData();
-            Assert.IsTrue(data.Length == 18140);
+            Assert.AreEqual(18140, data.Length);
         }
 
         [TestMethod]
@@ -271,7 +231,7 @@ namespace OpenMcdf.Test
 
             f = new CompoundFile("report_name_fix.xls", CFSUpdateMode.Update, CFSConfiguration.SectorRecycle | CFSConfiguration.EraseFreeSectors);
             cfs = f.RootStorage.GetStream("Workbook");
-            Assert.IsTrue(cfs.Name == "Workbook");
+            Assert.AreEqual("Workbook", cfs.Name);
             f.RootStorage.Delete("PoorBook");
             f.Commit();
             f.Close();
@@ -284,7 +244,7 @@ namespace OpenMcdf.Test
             var f = new CompoundFile("report_name_fix.xls");
             CFSVersion ver = f.Version;
 
-            Assert.IsTrue(ver == CFSVersion.Ver_3);
+            Assert.AreEqual(CFSVersion.Ver_3, ver);
 
             f.Close();
         }
@@ -596,11 +556,12 @@ namespace OpenMcdf.Test
             var f = new CompoundFile("MultipleStorage4.cfs");
             IList<CFItem> result = f.GetAllNamedEntries("MyStream");
 
-            Assert.IsTrue(result.Count == 3);
+            Assert.AreEqual(3, result.Count);
         }
 
 
         [TestMethod]
+        [ExpectedException(typeof(CFCorruptedFileException))]
         public void Test_CORRUPTED_CYCLIC_FAT_CHECK()
         {
             CompoundFile f = null;
@@ -609,20 +570,16 @@ namespace OpenMcdf.Test
                 f = new CompoundFile("CyclicFAT.cfs");
 
             }
-            catch (Exception ex)
-            {
-                Assert.IsTrue(ex is CFCorruptedFileException);
-            }
             finally
             {
-                if (f != null)
-                    f.Close();
+                f?.Close();
             }
         }
 
         [TestMethod]
         public void Test_DIFAT_CHECK()
         {
+            const string testFileName = "$OpenMcdf$LargeFile.cfs";
             CompoundFile f = null;
             try
             {
@@ -632,25 +589,24 @@ namespace OpenMcdf.Test
                 byte[] b1 = Helpers.GetBuffer(3, 0x0B);
                 st.Append(b1);                                      //Forcing creation of two DIFAT sectors
 
-                f.Save("$OpenMcdf$LargeFile.cfs");
+                f.Save(testFileName);
 
                 f.Close();
 
                 int cnt = 3;
-                f = new CompoundFile("$OpenMcdf$LargeFile.cfs");
+                f = new CompoundFile(testFileName);
 
                 byte[] b2 = new byte[cnt];
-                cnt = f.RootStorage.GetStream("LargeStream").Read(b2, 20000000, cnt);
+                f.RootStorage.GetStream("LargeStream").Read(b2, 20000000, cnt);
                 f.Close();
                 Assert.IsTrue(Helpers.CompareBuffer(b1, b2));
             }
             finally
             {
-                if (f != null)
-                    f.Close();
+                f?.Close();
 
-                if (File.Exists("$OpenMcdf$LargeFile.cfs"))
-                    File.Delete("$OpenMcdf$LargeFile.cfs");
+                if (File.Exists(testFileName))
+                    File.Delete(testFileName);
             }
 
         }
@@ -658,6 +614,7 @@ namespace OpenMcdf.Test
         [TestMethod]
         public void Test_ADD_LARGE_NUMBER_OF_ITEMS()
         {
+            const string testFileName = "$ItemsLargeNumber.cfs";
             int ITEM_NUMBER = 10000;
 
             CompoundFile f = null;
@@ -672,30 +629,24 @@ namespace OpenMcdf.Test
                     st.Append(buffer);
                 }
 
-
-                if (File.Exists("$ItemsLargeNumber.cfs"))
-                    File.Delete("$ItemsLargeNumber.cfs");
+                if (File.Exists(testFileName))
+                    File.Delete(testFileName);
 
                 f.Save("$ItemsLargeNumber.cfs");
                 f.Close();
 
-                f = new CompoundFile("$ItemsLargeNumber.cfs");
+                f = new CompoundFile(testFileName);
                 CFStream cfs = f.RootStorage.GetStream("Stream" + (ITEM_NUMBER / 2).ToString());
 
                 Assert.IsTrue(cfs != null, "Item is null");
                 Assert.IsTrue(Helpers.CompareBuffer(cfs.GetData(), buffer), "Items are different");
                 f.Close();
             }
-            catch (Exception ex)
-            {
-                Assert.Fail(ex.Message);
-            }
             finally
             {
-                //if (File.Exists("$ItemsLargeNumber.cfs"))
-                //    File.Delete("$ItemsLargeNumber.cfs");
+                if (File.Exists(testFileName))
+                    File.Delete(testFileName);
             }
-
         }
 
         [TestMethod]
@@ -821,9 +772,9 @@ namespace OpenMcdf.Test
         {
             CompoundFile cf = new CompoundFile("report.xls");
             Guid g = cf.getGuidBySID(0);
-            Assert.IsNotNull(g);
+            Assert.AreEqual(CLSID_EXCEL_Sheet_8, g);
             g = cf.getGuidForStream(3);
-            Assert.IsNotNull(g);
+            Assert.AreEqual(Guid.Empty, g);
             Assert.IsTrue(!String.IsNullOrEmpty(cf.GetNameDirEntry(2)));
             Assert.IsTrue(cf.GetNumDirectories() > 0);
         }
