@@ -394,8 +394,6 @@ namespace OpenMcdf.Extensions.OLEProperties
 
         private class VT_LPSTR_Property : TypedPropertyValue<string>
         {
-
-            private byte[] data;
             private int codePage;
 
             public VT_LPSTR_Property(VTPropertyType vType, int codePage, bool isVariant) : base(vType, isVariant)
@@ -405,14 +403,14 @@ namespace OpenMcdf.Extensions.OLEProperties
 
             public override string ReadScalarValue(System.IO.BinaryReader br)
             {
-                uint size = br.ReadUInt32();
-                data = br.ReadBytes((int)size);
+                int size = (int) br.ReadUInt32();
+                byte[] data = br.ReadCodePageStringData(codePage, size);
                 return Encoding.GetEncoding(codePage).GetString(data);
             }
 
             public override void WriteScalarValue(BinaryWriter bw, string pValue)
             {
-                data = Encoding.GetEncoding(codePage).GetBytes((String)pValue);
+                var data = Encoding.GetEncoding(codePage).GetBytes((String)pValue);
                 bw.Write((uint)data.Length);
                 bw.Write(data);
             }
