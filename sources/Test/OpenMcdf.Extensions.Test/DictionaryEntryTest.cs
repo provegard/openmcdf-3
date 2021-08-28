@@ -66,6 +66,22 @@ namespace OpenMcdf.Extensions.Test
 
             Assert.AreEqual("ab", entry.Name);
         }
+        
+        [TestMethod]
+        public void Test_no_padding_is_skipped_when_reading_ASCII_name()
+        {
+            BinaryReader reader = ReaderFor(new byte[]
+            {
+                2, 0, 0, 0,    // property identifier
+                3, 0, 0, 0,    // length in 8-bit chars including null terminator
+                97, 98, 0,     // name: 'a', 'b' + null terminator
+                99             // read check
+            });
+            _ = ReadEntry(reader, CodePages.CP_ASCII);
+
+            var next = reader.ReadByte();
+            Assert.AreEqual((byte) 99, next);
+        }
 
         private DictionaryEntry ReadEntry(BinaryReader reader, int codepage)
         {
