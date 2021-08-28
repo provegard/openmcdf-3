@@ -29,13 +29,21 @@ namespace OpenMcdf.Extensions.OLEProperties
 
             if (codePage != CP_WINUNICODE)
             {
-                nameBytes = br.ReadBytes(Length);
+                nameBytes = br.ReadBytes(Length - 1); // don't read the null terminator
+                
+                // skip the null terminator
+                br.ReadByte();
             }
             else
             {
-                nameBytes = br.ReadBytes(Length << 2);
+                int bytesLen = Length * 2;
+                nameBytes = br.ReadBytes(bytesLen - 2); // don't read the null terminator
+                
+                // skip the null terminator
+                br.ReadBytes(2);
 
-                int m = Length % 4;
+                // skip padding, if any
+                int m = 4 - bytesLen % 4;
                 if (m > 0)
                     br.ReadBytes(m);
             }
