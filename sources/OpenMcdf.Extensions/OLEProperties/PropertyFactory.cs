@@ -75,7 +75,7 @@ namespace OpenMcdf.Extensions.OLEProperties
                     pr = new VT_LPSTR_Property(vType, codePage, isVariant);
                     break;
                 case VTPropertyType.VT_LPWSTR:
-                    pr = new VT_LPWSTR_Property(vType, codePage, isVariant);
+                    pr = new VT_LPWSTR_Property(vType, isVariant);
                     break;
                 case VTPropertyType.VT_FILETIME:
                     pr = new VT_FILETIME_Property(vType, isVariant);
@@ -422,11 +422,9 @@ namespace OpenMcdf.Extensions.OLEProperties
         {
 
             private byte[] data;
-            private int codePage;
 
-            public VT_LPWSTR_Property(VTPropertyType vType, int codePage, bool isVariant) : base(vType, isVariant)
+            public VT_LPWSTR_Property(VTPropertyType vType, bool isVariant) : base(vType, isVariant)
             {
-                this.codePage = codePage;
             }
 
             public override string ReadScalarValue(System.IO.BinaryReader br)
