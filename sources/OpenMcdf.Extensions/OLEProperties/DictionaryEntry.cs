@@ -35,7 +35,7 @@ namespace OpenMcdf.Extensions.OLEProperties
             }
             else
             {
-                nameBytes = br.ReadUnicodeStringData(Length);
+                nameBytes = br.ReadUnicodeStringData(Length, true);
             }
         }
 

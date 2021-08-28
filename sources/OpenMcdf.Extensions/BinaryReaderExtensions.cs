@@ -7,7 +7,7 @@ namespace OpenMcdf.Extensions
     {
         private const int CP_WINUNICODE = 0x04B0;
         
-        internal static byte[] ReadUnicodeStringData(this BinaryReader reader, int nChars)
+        internal static byte[] ReadUnicodeStringData(this BinaryReader reader, int nChars, bool readAndDiscardPadding)
         {
             if (nChars == 0)
                 return Array.Empty<byte>();
@@ -17,33 +17,39 @@ namespace OpenMcdf.Extensions
                 
             // skip the null terminator
             reader.ReadBytes(2);
-                
-            // skip padding, if any
-            int m = bytesLen % 4;
-            if (m > 0)
-                reader.ReadBytes(4 - m);
+
+            if (readAndDiscardPadding)
+            {
+                // skip padding, if any
+                int m = bytesLen % 4;
+                if (m > 0)
+                    reader.ReadBytes(4 - m);
+            }
 
             return nameBytes;
         }
 
-        internal static byte[] ReadCodePageStringData(this BinaryReader reader, int codePage, int nChars)
+        internal static byte[] ReadCodePageStringData(this BinaryReader reader, int codePage, int nChars, bool readAndDiscardPadding)
         {
             if (nChars == 0)
                 return Array.Empty<byte>();
             
             if (codePage == CP_WINUNICODE)
-                return reader.ReadUnicodeStringData(nChars);
+                return reader.ReadUnicodeStringData(nChars, readAndDiscardPadding);
 
             int bytesLen = nChars;
             var nameBytes = reader.ReadBytes(bytesLen - 1); // don't read the null terminator
                 
             // skip the null terminator
             reader.ReadByte();
-                
-            // skip padding, if any
-            int m = bytesLen % 4;
-            if (m > 0)
-                reader.ReadBytes(4 - m);
+
+            if (readAndDiscardPadding)
+            {
+                // skip padding, if any
+                int m = bytesLen % 4;
+                if (m > 0)
+                    reader.ReadBytes(4 - m);
+            }
 
             return nameBytes;
         }
