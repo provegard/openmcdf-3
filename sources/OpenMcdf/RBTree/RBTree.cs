@@ -178,8 +178,6 @@ namespace RedBlackTree
                     if (compResult == 0)
                     {
                         throw new RBTreeDuplicatedItemException("RBNode " + newNode + " already present in tree");
-                        //n.Value = value;
-                        //return;
                     }
                     else if (compResult < 0)
                     {
@@ -194,7 +192,6 @@ namespace RedBlackTree
                     }
                     else
                     {
-                        //assert compResult > 0;
                         if (n.Right == null)
                         {
                             n.Right = insertedNode;
@@ -400,13 +397,11 @@ namespace RedBlackTree
             n.Parent.Color = Color.BLACK;
             if (n == n.Parent.Left)
             {
-                //assert nodeColor(n.sibling().right) == Color.RED;
                 n.Sibling().Right.Color = Color.BLACK;
                 RotateLeft(n.Parent);
             }
             else
             {
-                //assert nodeColor(n.sibling().left) == Color.RED;
                 n.Sibling().Left.Color = Color.BLACK;
                 RotateRight(n.Parent);
             }
