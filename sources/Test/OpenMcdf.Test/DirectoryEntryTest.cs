@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,6 +14,15 @@ namespace OpenMcdf.Test
             IList<IDirectoryEntry> dirRepository = new List<IDirectoryEntry>();
             IDirectoryEntry entry = DirectoryEntry.New("Test", StgType.StgInvalid, dirRepository);
             Assert.AreEqual("Test", entry.Name);
+        }
+        
+        [TestMethod]
+        public void Test_long_Name()
+        {
+            const string name = "abcdefghijklmnopqrstuvwxyzabcde";
+            IList<IDirectoryEntry> dirRepository = new List<IDirectoryEntry>();
+            IDirectoryEntry entry = DirectoryEntry.New(name, StgType.StgInvalid, dirRepository);
+            Assert.AreEqual(name, entry.Name);
         }
         
         [TestMethod]
@@ -122,7 +132,20 @@ namespace OpenMcdf.Test
             
             Assert.AreEqual("first", second.Name);
         }
-
+        
+        [DataTestMethod]
+        [DataRow("a\\b")]
+        [DataRow("a/b")]
+        [DataRow("a:b")]
+        [DataRow("a!b")]
+        [DataRow("abcdefghijklmnopqrstuvwxyzabcdef")]
+        [ExpectedException(typeof(CFException))]
+        public void Test_setting_invalid_name(string name)
+        {
+            IList<IDirectoryEntry> dirRepository = new List<IDirectoryEntry>();
+            DirectoryEntry.New(name, StgType.StgInvalid, dirRepository);
+        }
+        
         private Stream WriteToStream(IDirectoryEntry entry)
         {
             MemoryStream memory = new MemoryStream();
