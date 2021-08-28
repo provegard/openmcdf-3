@@ -75,14 +75,19 @@ namespace OpenMcdf
 
         public byte[] EntryName => entryName;
 
+        // cached for increased CompareTo performance
+        private string cachedEntryName;
+
         public String GetEntryName()
         {
-            if (entryName != null && entryName.Length > 0)
+            if (entryName != null && entryName.Length > 0 && nameLength > 0)
             {
-                return Encoding.Unicode.GetString(entryName).Remove((nameLength - 1) / 2);
+                // Skip null terminator when reading
+                return cachedEntryName =
+                    (cachedEntryName ?? Encoding.Unicode.GetString(entryName, 0, nameLength - 2));
             }
-            else
-                return String.Empty;
+
+            return String.Empty;
         }
 
         public void SetEntryName(String newEntryName)
@@ -115,6 +120,8 @@ namespace OpenMcdf
                 entryName = newName;
                 nameLength = (ushort)(temp.Length + 2);
             }
+
+            cachedEntryName = newEntryName;
         }
 
         private ushort nameLength;
@@ -206,41 +213,21 @@ namespace OpenMcdf
             set => size = value;
         }
 
-
         public int CompareTo(object obj)
         {
-
-            IDirectoryEntry otherDir = obj as IDirectoryEntry;
-
-            if (otherDir == null)
+            if (!(obj is IDirectoryEntry otherDir))
                 throw new CFException("Invalid casting: compared object does not implement IDirectorEntry interface");
 
             if (NameLength > otherDir.NameLength)
             {
                 return THIS_IS_GREATER;
             }
-            else if (NameLength < otherDir.NameLength)
+            if (NameLength < otherDir.NameLength)
             {
                 return OTHER_IS_GREATER;
             }
-            else
-            {
-                String thisName = Encoding.Unicode.GetString(EntryName, 0, NameLength);
-                String otherName = Encoding.Unicode.GetString(otherDir.EntryName, 0, otherDir.NameLength);
 
-                for (int z = 0; z < thisName.Length; z++)
-                {
-                    char thisChar = char.ToUpperInvariant(thisName[z]);
-                    char otherChar = char.ToUpperInvariant(otherName[z]);
-
-                    if (thisChar > otherChar)
-                        return THIS_IS_GREATER;
-                    else if (thisChar < otherChar)
-                        return OTHER_IS_GREATER;
-                }
-
-                return 0;
-            }
+            return string.Compare(GetEntryName(), otherDir.GetEntryName(), StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)

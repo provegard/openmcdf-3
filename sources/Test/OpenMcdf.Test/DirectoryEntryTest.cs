@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace OpenMcdf.Test
@@ -88,6 +89,46 @@ namespace OpenMcdf.Test
             DirectoryEntry.TryNew("second", StgType.StgProperty, dirRepository);
 
             Assert.AreEqual(2, dirRepository.Count);
+        }
+
+        [TestMethod]
+        public void Test_Name_after_read()
+        {
+            IList<IDirectoryEntry> dirRepository = new List<IDirectoryEntry>();
+            IDirectoryEntry first = DirectoryEntry.New("first", StgType.StgInvalid, dirRepository);
+
+            Stream memory = WriteToStream(first);
+
+            IDirectoryEntry second = DirectoryEntry.New("", StgType.StgInvalid, dirRepository);
+            second.Read(memory);
+            
+            Assert.AreEqual("first", second.Name);
+        }
+        
+        [TestMethod]
+        public void Test_cached_Name_after_read()
+        {
+            IList<IDirectoryEntry> dirRepository = new List<IDirectoryEntry>();
+            IDirectoryEntry first = DirectoryEntry.New("first", StgType.StgInvalid, dirRepository);
+
+            Stream memory = WriteToStream(first);
+
+            IDirectoryEntry second = DirectoryEntry.New("", StgType.StgInvalid, dirRepository);
+
+            // Force caching
+            _ = second.GetEntryName();
+            
+            second.Read(memory);
+            
+            Assert.AreEqual("first", second.Name);
+        }
+
+        private Stream WriteToStream(IDirectoryEntry entry)
+        {
+            MemoryStream memory = new MemoryStream();
+            entry.Write(memory);
+            memory.Position = 0;
+            return memory;
         }
     }
 }
