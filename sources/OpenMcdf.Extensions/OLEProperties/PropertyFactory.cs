@@ -431,20 +431,8 @@ namespace OpenMcdf.Extensions.OLEProperties
 
             public override string ReadScalarValue(System.IO.BinaryReader br)
             {
-                int nChars = br.ReadInt32();
-                if (nChars == 0)
-                    return "";
-                
-                int bytesLen = nChars * 2;
-                var nameBytes = br.ReadBytes(bytesLen - 2); // don't read the null terminator
-                
-                // skip the null terminator
-                br.ReadBytes(2);
-                
-                // skip padding, if any
-                int m = bytesLen % 4;
-                if (m > 0)
-                    br.ReadBytes(m);
+                int nChars = (int) br.ReadUInt32();
+                byte[] nameBytes = br.ReadUnicodeStringData(nChars);
                 
                 return Encoding.Unicode.GetString(nameBytes);
             }

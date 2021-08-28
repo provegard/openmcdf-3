@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -36,16 +35,7 @@ namespace OpenMcdf.Extensions.OLEProperties
             }
             else
             {
-                int bytesLen = Length * 2;
-                nameBytes = br.ReadBytes(bytesLen - 2); // don't read the null terminator
-                
-                // skip the null terminator
-                br.ReadBytes(2);
-
-                // skip padding, if any
-                int m = 4 - bytesLen % 4;
-                if (m > 0)
-                    br.ReadBytes(m);
+                nameBytes = br.ReadUnicodeStringData(Length);
             }
         }
 
