@@ -54,6 +54,22 @@ namespace OpenMcdf.Extensions.Test
         }
         
         [TestMethod]
+        public void Test_reader_has_correct_position_after_WINUNICODE_unpadded_name_is_read()
+        {
+            BinaryReader reader = ReaderFor(new byte[]
+            {
+                2, 0, 0, 0,    // property identifier
+                2, 0, 0, 0,    // length in 16-bit Unicode chars including null terminator
+                97, 0, 0, 0,   // name: 'a' + null terminator, no padding
+                99             // read check
+            });
+            _ = ReadEntry(reader, CodePages.CP_WINUNICODE);
+
+            var next = reader.ReadByte();
+            Assert.AreEqual((byte) 99, next);
+        }
+        
+        [TestMethod]
         public void Test_read_ASCII_name()
         {
             BinaryReader reader = ReaderFor(new byte[]

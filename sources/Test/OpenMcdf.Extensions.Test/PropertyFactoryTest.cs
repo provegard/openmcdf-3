@@ -129,6 +129,21 @@ namespace OpenMcdf.Extensions.Test
             Assert.AreEqual((byte) 99, next);
         }
         
+        [TestMethod]
+        public void Test_reader_is_at_correct_position_after_reading_LPSTR_property_of_ASCII_type_without_padding()
+        {
+            BinaryReader reader = ReaderFor(new byte[]
+            {
+                4, 0, 0, 0,    // length in 8-bit Unicode chars including null terminator
+                97, 98, 99, 0, // name: 'a', 'b', 'c' + null terminator, no padding
+                100            // read check
+            });
+            _ = ReadLPSTR(reader, CodePages.CP_ASCII);
+            
+            var next = reader.ReadByte();
+            Assert.AreEqual((byte) 100, next);
+        }
+        
         private string ReadLPSTR(BinaryReader reader, int codePage)
         {
             ITypedPropertyValue property = PropertyFactory.Instance.NewProperty(VTPropertyType.VT_LPSTR, codePage);

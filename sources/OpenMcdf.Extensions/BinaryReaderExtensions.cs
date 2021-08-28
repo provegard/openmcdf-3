@@ -19,9 +19,9 @@ namespace OpenMcdf.Extensions
             reader.ReadBytes(2);
                 
             // skip padding, if any
-            int m = 4 - bytesLen % 4;
+            int m = bytesLen % 4;
             if (m > 0)
-                reader.ReadBytes(m);
+                reader.ReadBytes(4 - m);
 
             return nameBytes;
         }
@@ -41,9 +41,9 @@ namespace OpenMcdf.Extensions
             reader.ReadByte();
                 
             // skip padding, if any
-            int m = 4 - bytesLen % 4;
+            int m = bytesLen % 4;
             if (m > 0)
-                reader.ReadBytes(m);
+                reader.ReadBytes(4 - m);
 
             return nameBytes;
         }
