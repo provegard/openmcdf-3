@@ -12,12 +12,12 @@ namespace OpenMcdf.Test
     [TestClass]
     public class RBTreeTest
     {
-        internal IList<IDirectoryEntry> GetDirectoryRepository(int count)
+        internal IList<IRBNode> GetNodeList(int count)
         {
-            List<IDirectoryEntry> repo = new List<IDirectoryEntry>(count);
+            List<IRBNode> repo = new List<IRBNode>(count);
             for (int i = 0; i < count; i++)
             {
-                DirectoryEntry.New(i.ToString(), StgType.StgInvalid, repo);
+                repo.Add(new TestNode(i));
             }
 
             return repo;
@@ -27,7 +27,7 @@ namespace OpenMcdf.Test
         public void Test_RBTREE_INSERT()
         {
             RBTree rbTree = new RBTree();
-            IList<IDirectoryEntry> repo = GetDirectoryRepository(1000000);
+            IList<IRBNode> repo = GetNodeList(1000000);
 
             foreach (var item in repo)
             {
@@ -36,18 +36,17 @@ namespace OpenMcdf.Test
 
             for (int i = 0; i < repo.Count; i++)
             {
-                rbTree.TryLookup(DirectoryEntry.Mock(i.ToString(), StgType.StgInvalid), out var c);
-                Assert.IsInstanceOfType(c, typeof(IDirectoryEntry));
-                Assert.AreEqual(i.ToString(), ((IDirectoryEntry)c).Name);
+                rbTree.TryLookup(new TestNode(i), out var c);
+                Assert.IsInstanceOfType(c, typeof(TestNode));
+                Assert.AreEqual(i, ((TestNode)c).Value);
             }
         }
-
 
         [TestMethod]
         public void Test_RBTREE_DELETE()
         {
             RBTree rbTree = new RBTree();
-            IList<IDirectoryEntry> repo = GetDirectoryRepository(25);
+            IList<IRBNode> repo = GetNodeList(25);
 
 
             foreach (var item in repo)
@@ -57,19 +56,19 @@ namespace OpenMcdf.Test
 
             try
             {
-                rbTree.Delete(DirectoryEntry.Mock("5", StgType.StgInvalid), out _);
-                rbTree.Delete(DirectoryEntry.Mock("24", StgType.StgInvalid), out _);
-                rbTree.Delete(DirectoryEntry.Mock("7", StgType.StgInvalid), out _);
+                rbTree.Delete(new TestNode(5), out _);
+                rbTree.Delete(new TestNode(24), out _);
+                rbTree.Delete(new TestNode(7), out _);
 
-                VerifyNodeDoesntExist(rbTree, "5");
-                VerifyNodeDoesntExist(rbTree, "7");
-                VerifyNodeDoesntExist(rbTree, "24");
+                VerifyNodeDoesntExist(rbTree, 5);
+                VerifyNodeDoesntExist(rbTree, 7);
+                VerifyNodeDoesntExist(rbTree, 24);
 
                 IRBNode c;
-                Assert.IsTrue(rbTree.TryLookup(DirectoryEntry.Mock("6", StgType.StgStream), out c));
-                Assert.IsInstanceOfType(c, typeof(IDirectoryEntry));
-                Assert.IsTrue(rbTree.TryLookup(DirectoryEntry.Mock("12", StgType.StgStream), out c));
-                Assert.AreEqual("12", ((IDirectoryEntry) c).Name);
+                Assert.IsTrue(rbTree.TryLookup(new TestNode(6), out c));
+                Assert.IsInstanceOfType(c, typeof(TestNode));
+                Assert.IsTrue(rbTree.TryLookup(new TestNode(12), out c));
+                Assert.AreEqual(12, ((TestNode) c).Value);
             }
             catch (Exception ex)
             {
@@ -81,23 +80,23 @@ namespace OpenMcdf.Test
         public void Test_visit()
         {
             RBTree rbTree = new RBTree();
-            IList<IDirectoryEntry> repo = GetDirectoryRepository(5);
+            IList<IRBNode> repo = GetNodeList(5);
 
             foreach (var item in repo)
             {
                 rbTree.Insert(item);
             }
 
-            IList<string> result = new List<string>();
-            rbTree.VisitTree(node => result.Add((node as IDirectoryEntry)?.Name));
+            IList<int?> result = new List<int?>();
+            rbTree.VisitTree(node => result.Add((node as TestNode)?.Value));
 
             var message = string.Join(", ", result);
-            CollectionAssert.AreEqual(new[] { "0", "1", "2", "3", "4" }, (ICollection) result, message);
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, (ICollection) result, message);
         }
 
-        private static void VerifyNodeDoesntExist(RBTree rbTree, string value)
+        private static void VerifyNodeDoesntExist(RBTree rbTree, int value)
         {
-            bool s = rbTree.TryLookup(DirectoryEntry.Mock(value, StgType.StgStream), out _);
+            bool s = rbTree.TryLookup(new TestNode(value), out _);
             Assert.IsFalse(s);
         }
 
@@ -183,7 +182,7 @@ namespace OpenMcdf.Test
         public void Test_RBTREE_ENUMERATE()
         {
             RBTree rbTree = new RBTree();
-            IList<IDirectoryEntry> repo = GetDirectoryRepository(10000);
+            IList<IRBNode> repo = GetNodeList(10000);
 
             foreach (var item in repo)
             {
@@ -191,6 +190,40 @@ namespace OpenMcdf.Test
             }
 
             VerifyProperties(rbTree);
+        }
+
+        private class TestNode : IRBNode
+        {
+            public int Value { get; private set; }
+
+            public TestNode(int value)
+            {
+                this.Value = value;
+            }
+
+            public int CompareTo(object obj)
+            {
+                if (obj is TestNode other) return Value.CompareTo(other.Value);
+                return 0;
+            }
+
+            public IRBNode Left { get; set; }
+            public IRBNode Right { get; set; }
+            public Color Color { get; set; }
+            public IRBNode Parent { get; set; }
+            public IRBNode Grandparent() => Parent?.Parent;
+
+            public IRBNode Sibling() => this == Parent?.Left ? Parent?.Right : Parent?.Left;
+
+            public IRBNode Uncle() => Parent?.Sibling();
+
+            public void AssignValueTo(IRBNode other)
+            {
+                if (other is TestNode node)
+                {
+                    node.Value = Value;
+                }
+            }
         }
     }
 }
