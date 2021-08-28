@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
+﻿using System.IO;
 
 namespace OpenMcdf.Extensions
 {
@@ -19,18 +16,5 @@ namespace OpenMcdf.Extensions
         {
             return new StreamDecorator(cfStream);
         }
-
-        ///// <summary>
-        ///// Return the current <see cref="T:OpenMcdf.CFStream">CFStream</see> object 
-        ///// as a OLE properties Stream.
-        ///// </summary>
-        ///// <param name="cfStream"></param>
-        ///// <returns>A <see cref="T:OpenMcdf.OLEProperties.PropertySetStream">OLE Propertie stream</see></returns>
-        //public static OLEProperties.PropertySetStream AsOLEProperties(this CFStream cfStream)
-        //{
-        //    var result = new OLEProperties.PropertySetStream();
-        //    result.Read(new BinaryReader(new StreamDecorator(cfStream)));
-        //    return result;
-        //}
     }
 }
