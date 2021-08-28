@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RedBlackTree;
@@ -74,6 +75,24 @@ namespace OpenMcdf.Test
             {
                 Assert.Fail("Item removal failed: " + ex.Message);
             }
+        }
+
+        [TestMethod]
+        public void Test_visit()
+        {
+            RBTree rbTree = new RBTree();
+            IList<IDirectoryEntry> repo = GetDirectoryRepository(5);
+
+            foreach (var item in repo)
+            {
+                rbTree.Insert(item);
+            }
+
+            IList<string> result = new List<string>();
+            rbTree.VisitTree(node => result.Add((node as IDirectoryEntry)?.Name));
+
+            var message = string.Join(", ", result);
+            CollectionAssert.AreEqual(new[] { "0", "1", "2", "3", "4" }, (ICollection) result, message);
         }
 
         private static void VerifyNodeDoesntExist(RBTree rbTree, string value)
